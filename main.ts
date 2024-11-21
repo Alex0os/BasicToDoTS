@@ -50,14 +50,6 @@ const server = http.createServer((req, res) => {
 })
 
 
-// TODO: Configure the psqlConnection to create the table and use it to store
-// users that connects to the main page of the server.
-//
-// TODO: Due to the fact that cookies expire after a certain amount of time,
-// then a script should be write to delete users where their cookie has
-// expired, thus creating a field that contains the expire date of the cookie
-// is a must in this case.
-// Function to add time to the current date
 
 
 function cookieTimeStamp(): string {
@@ -66,9 +58,11 @@ function cookieTimeStamp(): string {
 
 	let newDate = new Date(date);
 	return newDate.toISOString().replace("T", " ").replace(/\..*$/, "") + ":+00"; 
+	// Use UTC because with that you'll be able to store and compare
+	// independently from where or who send the request and got the cookie
 }
 
-async function createDB() {
+async function createDB(): Promise<void> {
 	const psqlConnection = await connect({
 		user: "Matixannder",
 		host: "localhost",
@@ -81,19 +75,26 @@ async function createDB() {
 	// select * from users 
 	// where cookie_expiration_date < NOW() at time zone 'utc';
 	const createUserTable =
-		`CREATE TABLE IF NOT EXISTS users (
+		`CREATE TABLE users (
 			id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			cookie_id VARCHAR(10),
 			cookie_expiration_date_utc TIMESTAMP
 	);`; 
 
 	await psqlConnection.query(createUserTable);
-	// Create table only if table doesn't exists already
+}
+
+(async function initServer() {
+	try {
+		await createDB();
+	} 
+	catch (e) {
+		console.log("Table already exists");
+	}
+
+	
 
 	server.listen(8080, () => {
 		console.log("HTTP server init successfully");
 	});
-}
-
-createDB();
-
+})();
