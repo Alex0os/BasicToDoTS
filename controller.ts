@@ -1,4 +1,4 @@
-import { IncomingMessage, ServerResponse } from "http";
+import { IncomingMessage } from "http";
 import path, { join } from "node:path";
 import { readFileSync }  from "fs";
 
@@ -58,11 +58,6 @@ function mainPage(userReq: IncomingMessage): Response {
 
 	return response;
 }
-
-// I'm thinking about exporting an object from the frontend JS file and then
-// to be modified when the user makes a request, so before the server sends
-// this HTML file, it modifies the object of its linked JS file so it serves
-// the data necessary
 
 export default function serverUrls(userReq: IncomingMessage): Response
 {
