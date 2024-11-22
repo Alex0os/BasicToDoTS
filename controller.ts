@@ -1,7 +1,9 @@
 import { IncomingMessage, ServerResponse } from "http";
+import path, { join } from "node:path";
+import { readFileSync }  from "fs";
 
-// It should return an object that specifies the responses options, like code
-// status, headers, body, etc
+
+const PROJECT_DIR = path.resolve(__dirname, "..");
 const COOKIE_TIMEOUT = 1 // 31 seconds
 
 interface ResponseHeader {
@@ -14,46 +16,59 @@ interface ResponseHeader {
 interface Response {
 	codeStatus: number;
 	header: ResponseHeader;
-	body: string;
-}
-
-const responseHeader: ResponseHeader = {
-	"content-type": "text/html",
-	"Access-Control-Allow-Origin": "*",
+	body?: string;
 }
 
 function mainPage(userReq: IncomingMessage): Response {
-	let response: Response;
+	let htmlContent: string;
+
+	try {
+		htmlContent = readFileSync(join(PROJECT_DIR, "public", "index.html"), "utf8")
+	} catch (e) {
+		return {
+			codeStatus: 500,
+			// Look for a proper response header for a 500
+			header: {
+				"Access-Control-Allow-Origin": "*",
+				"content-type": "plain/text"
+			}
+		}
+	}
+
+	let response: Response = {
+		codeStatus: 200,
+		header: {
+			"Access-Control-Allow-Origin": "*",
+			"content-type": "text/html"
+		},
+		body: htmlContent
+	}
 
 	if (!userReq.headers.cookie) {
 		// Set cookie
 		const cookieId = Math.floor(new Date().getTime() / 1000).toString(); // Date in seconds
 
-		responseHeader["set-cookie"] =
+		response.header["set-cookie"] =
 		"sessionId=" + cookieId + "; Path=/; HttpOnly; Secure; Max-Age=" 
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
-
-		response = {
-			codeStatus: 200,
-			header: responseHeader,
-			body: "This is the main page"
-		};
-		return response;
+	} else {
+		// Here I should implement the SSR of the tasks results on the
+		// htmlContent
 	}
 
-	response = {
-		codeStatus: 200,
-		header: responseHeader,
-		body: "Your cookie is\n\n" + userReq.headers.cookie
-	}
 	return response;
 }
+
+// I'm thinking about exporting an object from the frontend JS file and then
+// to be modified when the user makes a request, so before the server sends
+// this HTML file, it modifies the object of its linked JS file so it serves
+// the data necessary
 
 export default function serverUrls(userReq: IncomingMessage): Response
 {
 	if (userReq.url === "/")
 		return mainPage(userReq);
-	else 
+	else {
 		return {
 			codeStatus: 404,
 			header: {
@@ -61,7 +76,7 @@ export default function serverUrls(userReq: IncomingMessage): Response
 				"Access-Control-Allow-Origin": "*"
 			},
 			body: "404 Not Found"
+		}
 	}
-
 }
 
