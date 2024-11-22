@@ -5,19 +5,14 @@
 //
 // UI to create, change and delete tasks
 
-import * as http from "node:http";
-import * as fs from "fs";
-import path, { join } from "node:path";
+import { createServer } from "node:http";
 import { connect } from "ts-postgres";
 
 import serverUrls from "./controller";
 
 const COOKIE_TIMEOUT = 1 // 31 seconds
 
-const server = http.createServer((req, res) => {
-	const parentFolder = path.resolve(__dirname, "..");
-	const body = fs.readFileSync(join(parentFolder, "public", "index.html"), "utf8")
-
+const server = createServer((req, res) => {
 	const obtainedRes = serverUrls(req);
 
 	res
@@ -54,16 +49,31 @@ async function createDB(): Promise<void> {
 			cookie_expiration_date_utc TIMESTAMP
 	);`; 
 
-	await psqlConnection.query(createUserTable);
+	const createTasksTable = 
+		`CREATE TABLE tasks (
+			id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+			user_id BIGINT REFERENCES users (id),
+			title varchar(255),
+			description TEXT
+	);`;
+
+
+	try {
+		await psqlConnection.query(createUserTable);
+	} catch (e) {
+		console.log("User's table already exists");
+	}
+
+	try {
+		await psqlConnection.query(createTasksTable);
+	}  catch (e) {
+		console.log("Tasks table already exists");
+	}
+
 }
 
 (async function initServer() {
-	try {
-		await createDB();
-	} 
-	catch (e) {
-		console.log("Table already exists");
-	}
+	await createDB();
 
 
 	server.listen(8080, () => {
