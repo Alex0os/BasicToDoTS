@@ -1,6 +1,7 @@
 import { IncomingMessage } from "http";
 import path, { join } from "node:path";
 import { readFileSync }  from "fs";
+import { createUser } from "./db_implementations";
 
 interface ResponseHeader {
 	[key: string]: string | undefined;
@@ -94,8 +95,7 @@ function mainPage(userReq: IncomingMessage): Response {
 		"sessionId=" + cookieId + "; Path=/; HttpOnly; Secure; Max-Age=" 
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
 	} else {
-		// Here I should implement the SSR of the tasks results on the
-		// indexHtml
+		createUser(userReq.headers.cookie);
 	}
 
 	const response: Response = {

@@ -12,11 +12,11 @@ export async function createTable(): Promise<void> {
 
 	// This is the command that I'll use when I have to compare the timestamps
 	// select * from users 
-	// where cookie_expiration_date < NOW() at time zone 'utc';
+	// where cookie_expiration_date < NOW()::TIMESTAMP(0) at time zone 'utc';
 	const createUserTable =
 		`CREATE TABLE users (
 			id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-			cookie_id VARCHAR(10),
+			cookie_id VARCHAR(15),
 			cookie_expiration_date_utc TIMESTAMP
 	);`; 
 
@@ -24,7 +24,7 @@ export async function createTable(): Promise<void> {
 		`CREATE TABLE tasks (
 			id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
 			user_id BIGINT REFERENCES users (id),
-			title varchar(255),
+			title VARCHAR(255),
 			description TEXT
 	);`;
 
@@ -43,14 +43,13 @@ export async function createTable(): Promise<void> {
 
 }
 
+// select now() at time zone 'utc'; to get the utc time in Psql
 function cookieTimeStamp(): string {
 	let date = new Date().getTime();
 	date += COOKIE_TIMEOUT * 1000;
 
 	let newDate = new Date(date);
-	return newDate.toISOString().replace("T", " ").replace(/\..*$/, "") + ":+00"; 
-	// Use UTC because with that you'll be able to store and compare
-	// independently from where or who send the request and got the cookie
+	return newDate.toISOString().replace("T", " ").replace(/\..*$/, ""); 
 }
 
 export async function createUser(cookie_id: string): Promise<void> {
@@ -61,10 +60,18 @@ export async function createUser(cookie_id: string): Promise<void> {
 		database: "TODOAppDB",
 	});
 
+	// First we see if the user already exists
+	const raw_sessionId = cookie_id.replace(/sessionId=/g, "");
+	const result = await psqlConnection.query(`SELECT * FROM users WHERE cookie_id='${raw_sessionId}'`);
+
+	if (result.status !== "SELECT 0") {
+		console.log("User with sessionId: "+ raw_sessionId+ " already exists");
+		return;
+	}
 
 	const createUserQuery = 
-		`INSERT INTO users (cookie_id, cookie_expiration_date)
-		VALUES (${cookie_id}, ${cookieTimeStamp()});`;
+		`INSERT INTO users (cookie_id, cookie_expiration_date_utc)
+		VALUES (${raw_sessionId}, '${cookieTimeStamp()}');`;
 
 	try {
 		await psqlConnection.query(createUserQuery);
