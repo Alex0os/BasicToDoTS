@@ -7,10 +7,9 @@
 
 import { createServer } from "node:http";
 
-import serverUrls from "./controller";
+import { serverUrls, COOKIE_TIMEOUT } from "./controller";
 import createDB from "./db_implementations";
 
-const COOKIE_TIMEOUT = 1 // 31 seconds
 
 const server = createServer((req, res) => {
 	const obtainedRes = serverUrls(req);

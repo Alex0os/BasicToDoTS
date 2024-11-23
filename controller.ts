@@ -22,7 +22,7 @@ interface Response {
 }
 
 const PROJECT_DIR = path.resolve(__dirname, "..");
-const COOKIE_TIMEOUT = 1 // 1 seconds
+export const COOKIE_TIMEOUT = 1 // 1 seconds
 
 function mainPage(userReq: IncomingMessage): Response {
 	let htmlContent: string;
@@ -64,7 +64,7 @@ function mainPage(userReq: IncomingMessage): Response {
 	return response;
 }
 
-export default function serverUrls(userReq: IncomingMessage): Response
+export function serverUrls(userReq: IncomingMessage): Response
 {
 	if (userReq.url === "/")
 		return mainPage(userReq);
