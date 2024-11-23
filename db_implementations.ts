@@ -1,6 +1,8 @@
 import { connect } from "ts-postgres";
 
-export default async function createDB(): Promise<void> {
+import { COOKIE_TIMEOUT } from "./controller";
+
+export async function createTable(): Promise<void> {
 	const psqlConnection = await connect({
 		user: "Matixannder",
 		host: "localhost",
@@ -39,4 +41,35 @@ export default async function createDB(): Promise<void> {
 		console.log("Tasks table already exists");
 	}
 
+}
+
+function cookieTimeStamp(): string {
+	let date = new Date().getTime();
+	date += COOKIE_TIMEOUT * 1000;
+
+	let newDate = new Date(date);
+	return newDate.toISOString().replace("T", " ").replace(/\..*$/, "") + ":+00"; 
+	// Use UTC because with that you'll be able to store and compare
+	// independently from where or who send the request and got the cookie
+}
+
+export async function createUser(cookie_id: string): Promise<void> {
+	const psqlConnection = await connect({
+		user: "Matixannder",
+		host: "localhost",
+		port: 5432,
+		database: "TODOAppDB",
+	});
+
+
+	const createUserQuery = 
+		`INSERT INTO users (cookie_id, cookie_expiration_date)
+		VALUES (${cookie_id}, ${cookieTimeStamp()});`;
+
+	try {
+		await psqlConnection.query(createUserQuery);
+	} catch (e) {
+		console.log("An error happened");
+		console.log(e);
+	}
 }

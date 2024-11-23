@@ -27,7 +27,7 @@ interface Response {
 }
 
 const PROJECT_DIR = path.resolve(__dirname, "..");
-export const COOKIE_TIMEOUT = 30 // seconds
+export const COOKIE_TIMEOUT = 60 * 60 // 1 hour
 
 // Let's create the implementation that will allow the user to create the task
 function taskCreationPage(userReq: IncomingMessage): Response {
