@@ -2,10 +2,6 @@ import { IncomingMessage } from "http";
 import path, { join } from "node:path";
 import { readFileSync }  from "fs";
 
-
-const PROJECT_DIR = path.resolve(__dirname, "..");
-const COOKIE_TIMEOUT = 1 // 31 seconds
-
 interface ResponseHeader {
 	[key: string]: string | undefined;
 	"content-type": string;
@@ -13,11 +9,20 @@ interface ResponseHeader {
 	"set-cookie"?: string | undefined;
 }
 
+interface ErrorHeader {
+	[key: string]: string | undefined;
+	"content-type": string;
+	"connection": string;
+}
+
 interface Response {
 	codeStatus: number;
-	header: ResponseHeader;
+	header: ResponseHeader | ErrorHeader;
 	body?: string;
 }
+
+const PROJECT_DIR = path.resolve(__dirname, "..");
+const COOKIE_TIMEOUT = 1 // 1 seconds
 
 function mainPage(userReq: IncomingMessage): Response {
 	let htmlContent: string;
@@ -27,33 +32,33 @@ function mainPage(userReq: IncomingMessage): Response {
 	} catch (e) {
 		return {
 			codeStatus: 500,
-			// Look for a proper response header for a 500
 			header: {
-				"Access-Control-Allow-Origin": "*",
-				"content-type": "plain/text"
-			}
+				"content-type": "plain/text",
+				"connection": "close"
+			} as ErrorHeader,
+			body: "500 Server Error"
 		}
 	}
 
-	let response: Response = {
-		codeStatus: 200,
-		header: {
-			"Access-Control-Allow-Origin": "*",
-			"content-type": "text/html"
-		},
-		body: htmlContent
+	const response_header: ResponseHeader = {
+		"Access-Control-Allow-Origin": "*",
+		"content-type": "text/html"
 	}
 
 	if (!userReq.headers.cookie) {
-		// Set cookie
 		const cookieId = Math.floor(new Date().getTime() / 1000).toString(); // Date in seconds
-
-		response.header["set-cookie"] =
+		response_header["set-cookie"] =
 		"sessionId=" + cookieId + "; Path=/; HttpOnly; Secure; Max-Age=" 
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
 	} else {
 		// Here I should implement the SSR of the tasks results on the
 		// htmlContent
+	}
+
+	const response: Response = {
+		codeStatus: 200,
+		header: response_header as ResponseHeader,
+		body: htmlContent
 	}
 
 	return response;
