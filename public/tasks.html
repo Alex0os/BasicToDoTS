@@ -4,8 +4,58 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title></title>
+		<style>
+		body {
+			background-color: #0F0F0F;
+			color: white;
+			display: flex;
+			justify-content: center;
+			align-content: center;
+		}
+
+		form {
+			display: flex;
+			flex-direction: column;
+			width: 80%;
+			align-items: center;
+		}
+
+		#title {
+			width: 400px;
+		}
+
+		#content {
+			border-bottom: 1px solid white;
+			width: 40vw;
+		}
+
+		#saver {
+			width: 10vw;
+			margin-top: 5px;
+		}
+		</style>
+
 	</head>
 	<body>
-		<h1>This is the page to create tasks!</h1>
+		<form id="myForm" method="post">
+			<input placeholder="Introduce a title" type="text" 
+			name="title" id="title" maxlength="255" required><br>
+
+			<p>Description</p>
+			<div contenteditable="true" id="content"
+				aria-placeholder="Introduce a description">
+			</div>
+			<!--- It needed a FUCKING NAME, FUUUUUUUUCK--->
+			<input name="description" type="hidden" id="hiddenone">
+			<input type="submit" id="saver">
+		</form>
+		<script>
+			document.getElementById("myForm").addEventListener("submit", function(e){
+				e.preventDefault();
+				let el = document.getElementById("hiddenone");
+				el.value = document.getElementById("content").innerHTML;
+				document.getElementById("myForm").submit();
+			})
+		</script>
 	</body>
 </html>

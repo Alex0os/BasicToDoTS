@@ -5,14 +5,24 @@
 //
 // UI to create, change and delete tasks
 
-import { createServer } from "node:http";
+import { createServer, request } from "node:http";
 
 import { serverUrls, COOKIE_TIMEOUT } from "./controller";
 import { createTable } from "./db_implementations";
 
 
 const server = createServer((req, res) => {
+	console.log(req.url);
+
+	let body = '';
+	req.on('data', (chunk) => {
+		body += chunk;
+	});
+    req.on('end', () => {
+        console.log(body);
+    });
 	const obtainedRes = serverUrls(req);
+
 
 	res
 	.writeHead(obtainedRes.codeStatus, obtainedRes.header)

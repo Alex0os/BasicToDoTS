@@ -43,7 +43,6 @@ export async function createTable(): Promise<void> {
 
 }
 
-// select now() at time zone 'utc'; to get the utc time in Psql
 function cookieTimeStamp(): string {
 	let date = new Date().getTime();
 	date += COOKIE_TIMEOUT * 1000;
@@ -51,6 +50,10 @@ function cookieTimeStamp(): string {
 	let newDate = new Date(date);
 	return newDate.toISOString().replace("T", " ").replace(/\..*$/, ""); 
 }
+
+// Query to delete users when their cookie expires:
+// delete from users
+// where cookie_expiration_date_utc < now() at time zone 'utc';
 
 export async function createUser(cookie_id: string): Promise<void> {
 	const psqlConnection = await connect({
