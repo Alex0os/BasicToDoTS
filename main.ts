@@ -12,25 +12,22 @@ import { createTable } from "./db_implementations";
 
 
 const server = createServer((req, res) => {
-	console.log(req.url);
+	if (req.method?.toLowerCase() === "post") {
+		let body = '';
+		req.on("data", (buffer) => {
+			body = buffer;
+		});
 
-	let body = '';
-	req.on('data', (chunk) => {
-		body += chunk;
-	});
-    req.on('end', () => {
-        console.log(body);
-    });
-	const obtainedRes = serverUrls(req);
-
-
-	res
-	.writeHead(obtainedRes.codeStatus, obtainedRes.header)
-	.end(obtainedRes.body); // Specifies no more data will be send in this response
+		req.on("end", () => {
+			console.log(body.toString());
+		});
+	} else if (req.method?.toLowerCase() === "get") {
+		const obtainedRes = serverUrls(req);
+		res
+		.writeHead(obtainedRes.codeStatus, obtainedRes.header)
+		.end(obtainedRes.body); // Specifies no more data will be send in this response
+	}
 });
-
-
-
 
 (async function initServer() {
 	await createTable();

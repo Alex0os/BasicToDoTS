@@ -65,12 +65,9 @@ export async function createUser(cookie_id: string): Promise<void> {
 
 	// First we see if the user already exists
 	const raw_sessionId = cookie_id.replace(/sessionId=/g, "");
-	const result = await psqlConnection.query(`SELECT * FROM users WHERE cookie_id='${raw_sessionId}'`);
-
-	if (result.status !== "SELECT 0") {
-		console.log("User with sessionId: "+ raw_sessionId+ " already exists");
-		return;
-	}
+	await psqlConnection.query(`SELECT * FROM users WHERE cookie_id='${raw_sessionId}'`);
+	
+	// It won't try to create the user again
 
 	const createUserQuery = 
 		`INSERT INTO users (cookie_id, cookie_expiration_date_utc)

@@ -94,8 +94,11 @@ function mainPage(userReq: IncomingMessage): Response {
 		response_header["set-cookie"] =
 		"sessionId=" + cookieId + "; Path=/; HttpOnly; Secure; Max-Age=" 
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
+
+		createUser("sessionId=" + cookieId);
 	} else {
-		createUser(userReq.headers.cookie);
+		console.log("User already exists -> " + userReq.headers.cookie);
+		// We'll get the user's task in this part of the code
 	}
 
 	const response: Response = {
