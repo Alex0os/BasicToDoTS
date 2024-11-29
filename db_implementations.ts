@@ -2,6 +2,18 @@ import { connect } from "ts-postgres";
 
 import { COOKIE_TIMEOUT } from "./controller";
 
+type UIID = string;
+
+type TaskInfo = {
+	title: string;
+	description: string;
+}
+
+export interface Tasks {
+	[key: UIID]: TaskInfo;
+}
+
+
 export async function createTable(): Promise<void> {
 	const psqlConnection = await connect({
 		user: "Matixannder",
@@ -78,5 +90,39 @@ export async function createUser(cookie_id: string): Promise<void> {
 	} catch (e) {
 		console.log("An error happened");
 		console.log(e);
+	}
+}
+
+export async function getUserTasks(userCookie: string): Promise<Tasks | void> {
+	const raw_sessionId = userCookie.replace(/sessionId=/g, "");
+
+	const psqlConnection = await connect({
+		user: "Matixannder",
+		host: "localhost",
+		port: 5432,
+		database: "TODOAppDB",
+	});
+
+	const getTasksQuery = 
+		`SELECT task_uuid, title, description FROM tasks
+		WHERE user_id=
+		(SELECT id FROM users WHERE cookie_id='${raw_sessionId}')`;
+
+	const getTasks = await psqlConnection.query(getTasksQuery);
+
+	if (getTasks.status !== "SELECT 0") {
+		const user_tasks: Tasks = {};
+		const UUID = 0, TITLE = 1, DESCRIPTION = 2;
+
+		for (let row of getTasks.rows) {
+			user_tasks[row[UUID]] = {
+				title: row[TITLE],
+				description: row[DESCRIPTION]
+			}
+		}
+		return user_tasks;
+	}
+	else {
+		return Promise.reject("No tasks found for this user -> " + userCookie);
 	}
 }

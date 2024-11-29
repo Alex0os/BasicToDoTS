@@ -1,7 +1,7 @@
 import { IncomingMessage } from "http";
 import path, { join } from "node:path";
 import { readFileSync }  from "fs";
-import { createUser } from "./db_implementations";
+import { createUser, getUserTasks } from "./db_implementations";
 
 interface ResponseHeader {
 	[key: string]: string | undefined;
@@ -98,8 +98,28 @@ function mainPage(userReq: IncomingMessage): Response {
 		createUser("sessionId=" + cookieId);
 	} else {
 		console.log("User already exists -> " + userReq.headers.cookie);
-		// We'll get the user's task in this part of the code
+
+
+		// The thing here is that, if I have to return the response inside of
+		// here, it will force me to return the object inside a promise, so
+		// I'll have to re-structure the whole code
+		//
+		// TODO: Find a way to make the function wait for the promise to
+		// resolve or reject before it returns
+		//
+		// Otherwise, just re-write the code, it'll be fun (lie to me).
+
+		getUserTasks(userReq.headers.cookie)
+		.then((result) => {
+			console.log("The user tasks are:\n\n");
+			console.log(result);
+		}).
+		catch(rej => console.log("The error is -> " +  rej)).
+		then(() => {
+			console.log("So here you should return");
+		});
 	}
+	
 
 	const response: Response = {
 		codeStatus: 200,
