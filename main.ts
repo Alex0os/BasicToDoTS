@@ -22,10 +22,11 @@ const server = createServer((req, res) => {
 			console.log(body.toString());
 		});
 	} else if (req.method?.toLowerCase() === "get") {
-		const obtainedRes = serverUrls(req);
-		res
-		.writeHead(obtainedRes.codeStatus, obtainedRes.header)
-		.end(obtainedRes.body); // Specifies no more data will be send in this response
+		serverUrls(req).then((obtainedRes) => {
+			res
+			.writeHead(obtainedRes.codeStatus, obtainedRes.header)
+			.end(obtainedRes.body);
+		});
 	}
 });
 

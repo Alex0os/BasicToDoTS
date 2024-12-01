@@ -123,6 +123,6 @@ export async function getUserTasks(userCookie: string): Promise<Tasks | void> {
 		return user_tasks;
 	}
 	else {
-		return Promise.reject("No tasks found for this user -> " + userCookie);
+		throw new Error("This user has no tasks");
 	}
 }

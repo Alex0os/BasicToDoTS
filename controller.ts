@@ -68,7 +68,7 @@ function taskCreationPage(userReq: IncomingMessage): Response {
 	}
 }
 
-function mainPage(userReq: IncomingMessage): Response {
+async function mainPage(userReq: IncomingMessage): Promise<Response>{
 	let indexHtml: string;
 
 	try {
@@ -96,44 +96,40 @@ function mainPage(userReq: IncomingMessage): Response {
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
 
 		createUser("sessionId=" + cookieId);
+
+		const response: Response = {
+			codeStatus: 200,
+			header: response_header as ResponseHeader,
+			body: indexHtml
+		};
+
+		return response;
 	} else {
 		console.log("User already exists -> " + userReq.headers.cookie);
-
-
-		// The thing here is that, if I have to return the response inside of
-		// here, it will force me to return the object inside a promise, so
-		// I'll have to re-structure the whole code
-		//
-		// TODO: Find a way to make the function wait for the promise to
-		// resolve or reject before it returns
-		//
-		// Otherwise, just re-write the code, it'll be fun (lie to me).
-
-		getUserTasks(userReq.headers.cookie)
-		.then((result) => {
-			console.log("The user tasks are:\n\n");
+		try {
+			const result = await getUserTasks(userReq.headers.cookie);
 			console.log(result);
-		}).
-		catch(rej => console.log("The error is -> " +  rej)).
-		then(() => {
-			console.log("So here you should return");
-		});
+		} catch (e){
+			// In case the function doesn't get any rows 
+			console.error(e);
+		}
+
+		const response: Response = {
+			codeStatus: 200,
+			header: response_header as ResponseHeader,
+			body: indexHtml
+		};
+
+		return response;
 	}
-	
-
-	const response: Response = {
-		codeStatus: 200,
-		header: response_header as ResponseHeader,
-		body: indexHtml
-	};
-
-	return response;
 }
 
-export function serverUrls(userReq: IncomingMessage): Response
+export async function serverUrls(userReq: IncomingMessage): Promise<Response>
 {
+	// TODO: See if you can separate the async and sync implementation so it
+	// only get into async stuff when necessary
 	if (userReq.url === "/")
-		return mainPage(userReq);
+			return mainPage(userReq);
 	else if (userReq.url === "/createTask") {
 		return taskCreationPage(userReq);
 	}
