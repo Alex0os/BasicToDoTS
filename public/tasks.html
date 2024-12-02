@@ -43,18 +43,26 @@
 
 			<p>Description</p>
 			<div contenteditable="true" id="content"
-				aria-placeholder="Introduce a description">
-			</div>
-			<input name="description" type="hidden" id="hiddenone">
+				aria-placeholder="Introduce a description"></div>
+			<input name="description" type="hidden" id="hiddenone" required>
 			<input type="submit" id="saver">
 		</form>
 		<script>
-			document.getElementById("myForm").addEventListener("submit", function(e){
+			document.getElementById("myForm").addEventListener("submit", function(e) {
 				e.preventDefault();
 				let el = document.getElementById("hiddenone");
-				el.value = document.getElementById("content").innerHTML;
-				document.getElementById("myForm").submit();
-			})
+				let desc = document.getElementById("content").innerHTML;
+
+				if (!desc) {
+					alert("You must add a description");
+				} else {
+					el.value = desc;
+					document.getElementById("myForm").submit();
+					// setTimout is because submit won't send the data if the
+					// reloading is just next to it, so it seems is async
+					setTimeout(() => location.reload(), 50);
+				}
+			});
 		</script>
 	</body>
 </html>
