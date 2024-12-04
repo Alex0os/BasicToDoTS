@@ -50,17 +50,23 @@
 		<script>
 			document.getElementById("myForm").addEventListener("submit", function(e) {
 				e.preventDefault();
-				let el = document.getElementById("hiddenone");
+				let title = document.getElementById("title").value; 
 				let desc = document.getElementById("content").innerHTML;
+
+				// You'll have to turn the data into a JSON string to then
+				// be send trough the form
 
 				if (!desc) {
 					alert("You must add a description");
 				} else {
-					el.value = desc;
-					document.getElementById("myForm").submit();
-					// setTimout is because submit won't send the data if the
-					// reloading is just next to it, so it seems is async
-					setTimeout(() => location.reload(), 50);
+					const data = JSON.stringify({title: title, description: desc})
+					fetch("/data", {
+						method: "POST",
+						headers: {"content-type": "application/json"},
+						body: data
+					});
+
+					location.reload();
 				}
 			});
 		</script>
