@@ -95,7 +95,9 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 		"sessionId=" + cookieId + "; Path=/; HttpOnly; Secure; Max-Age=" 
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
 
-		createUser("sessionId=" + cookieId);
+		// I'd like to remember, not prefixing async in promises inside async
+		// functions mostly makes sense if you are returning another promise
+		await createUser("sessionId=" + cookieId);
 
 		const response: Response = {
 			codeStatus: 200,
@@ -105,6 +107,8 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 
 		return response;
 	} else {
+		// I remember now, this condition is to return the user's task (if he has any)
+		// and rendering them in the HTML view
 		console.log("User already exists -> " + userReq.headers.cookie);
 		try {
 			const result = await getUserTasks(userReq.headers.cookie);
@@ -129,7 +133,7 @@ export async function serverUrls(userReq: IncomingMessage): Promise<Response>
 	// TODO: See if you can separate the async and sync implementation so it
 	// only get into async stuff when necessary
 	if (userReq.url === "/")
-			return mainPage(userReq);
+		return mainPage(userReq);
 	else if (userReq.url === "/createTask") {
 		return taskCreationPage(userReq);
 	}

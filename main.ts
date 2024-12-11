@@ -5,21 +5,26 @@
 //
 // UI to create, change and delete tasks
 
-import { createServer, request } from "node:http";
+import { createServer } from "node:http";
 
-import { serverUrls, COOKIE_TIMEOUT } from "./controller";
-import { createTable } from "./db_implementations";
+import { serverUrls } from "./controller";
+import { createTable, createTask } from "./db_implementations";
 
 
 const server = createServer((req, res) => {
 	if (req.method?.toLowerCase() === "post") {
-		let body = '';
+		if (!req.headers.cookie)
+			// TODO: Server should return a bad request response
+			process.exit("No cookie given");
+
+
+		let reqBody = '';
 		req.on("data", (buffer) => {
-			body = buffer;
+			reqBody = buffer;
 		});
 
 		req.on("end", () => {
-			console.log(body.toString());
+			createTask(req.headers.cookie as string, JSON.parse(reqBody.toString()));
 		});
 	} else if (req.method?.toLowerCase() === "get") {
 		serverUrls(req).then((obtainedRes) => {
@@ -29,6 +34,7 @@ const server = createServer((req, res) => {
 		});
 	}
 });
+
 
 (async function initServer() {
 	await createTable();
