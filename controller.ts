@@ -1,7 +1,9 @@
 import { IncomingMessage } from "http";
+import * as cheerio from "cheerio"
 import path, { join } from "node:path";
 import { readFileSync }  from "fs";
-import { createUser, getUserTasks } from "./db_implementations";
+
+import { createUser, getUserTasks, Tasks } from "./db_implementations";
 
 interface ResponseHeader {
 	[key: string]: string | undefined;
@@ -112,7 +114,19 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 		console.log("User already exists -> " + userReq.headers.cookie);
 		try {
 			const result = await getUserTasks(userReq.headers.cookie);
-			console.log(result);
+			const $ = cheerio.load(indexHtml);
+			let v: string[] = [];
+			if (typeof result === "object") {
+				for (let task in result as Tasks) {
+					let a = result[task].title;
+					let b = result[task].description;
+					v.push(`<div data-uuid=${task}><h3>${a}</h3><p>${b}</p></div>`);
+				}
+				for (let child of v)
+					$("body").append(child);
+			}
+			$("body").append("<p> Hello this is my website </p>");
+			indexHtml = $.html();
 		} catch (e){
 			// In case the function doesn't get any rows 
 			console.error(e);
