@@ -13,10 +13,18 @@ import { createTable, createTask } from "./db_implementations";
 
 const server = createServer((req, res) => {
 	if (req.method?.toLowerCase() === "post") {
-		if (!req.headers.cookie)
-			// TODO: Server should return a bad request response
-			process.exit("No cookie given");
-
+		if (!req.headers.cookie) {
+			const unauthorized = {
+				codeStatus: 401,
+				header: {
+					"content-type": "text/html",
+				}
+			}
+			res
+			.writeHead(unauthorized.codeStatus, unauthorized.header)
+			.end();
+			return;
+		}
 
 		let reqBody = '';
 		req.on("data", (buffer) => {
