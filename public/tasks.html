@@ -53,8 +53,12 @@
 				let title = document.getElementById("title").value; 
 				let desc = document.getElementById("content").innerHTML;
 
-				// You'll have to turn the data into a JSON string to then
-				// be send trough the form
+				// Sometimes input appears with <br> tags and I don't know why exactly
+				desc = desc.replace(/<div>/g, "\n").replace(/<\/div>/g, "");
+
+				// TODO: Create a regex to escape all the
+				// special characters that can mess up with the
+				// task insertion
 
 				if (!desc) {
 					alert("You must add a description");
