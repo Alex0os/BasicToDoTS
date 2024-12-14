@@ -50,15 +50,19 @@
 		<script>
 			document.getElementById("myForm").addEventListener("submit", function(e) {
 				e.preventDefault();
-				let title = document.getElementById("title").value; 
-				let desc = document.getElementById("content").innerHTML;
+				let title = "$title$" + document.getElementById("title").value + "$title$";
+				let desc = "$desc$" + document.getElementById("content").innerHTML + "$desc$";
 
 				// Sometimes input appears with <br> tags and I don't know why exactly
 				desc = desc.replace(/<div>/g, "\n").replace(/<\/div>/g, "");
 
 				// TODO: Create a regex to escape all the
 				// special characters that can mess up with the
-				// task insertion
+				// task insertion.
+
+				// Not necessary, since you can use
+				// dollar-quoting delimeters to put a literal
+				// string
 
 				if (!desc) {
 					alert("You must add a description");

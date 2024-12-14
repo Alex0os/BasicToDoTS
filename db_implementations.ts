@@ -120,8 +120,9 @@ export async function createTask(userCookie: string, task: TaskInfo): Promise<vo
 	const lookForUser = `SELECT id FROM users WHERE cookie_id='${cookie}'`
 	const createNewTaskQuery = 
 		`INSERT INTO tasks (user_id, title, description)
-		 VALUES ((${lookForUser}), '${task.title}', '${task.description}')`;
+		 VALUES ((${lookForUser}), ${task.title}, ${task.description})`;
 	
+	// Why the hell this is "any"?
 	let result: any;
 
 	try {
