@@ -56,14 +56,6 @@
 				// Sometimes input appears with <br> tags and I don't know why exactly
 				desc = desc.replace(/<div>/g, "\n").replace(/<\/div>/g, "");
 
-				// TODO: Create a regex to escape all the
-				// special characters that can mess up with the
-				// task insertion.
-
-				// Not necessary, since you can use
-				// dollar-quoting delimeters to put a literal
-				// string
-
 				if (!desc) {
 					alert("You must add a description");
 				} else {

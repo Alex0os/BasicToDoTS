@@ -110,7 +110,7 @@ export async function getUserTasks(userCookie: string): Promise<Tasks | void> {
 		return user_tasks;
 	}
 	else {
-		throw new Error("This user has no tasks");
+		return;
 	}
 }
 

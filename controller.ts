@@ -109,28 +109,28 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 
 		return response;
 	} else {
-		// I remember now, this condition is to return the user's task (if he has any)
-		// and rendering them in the HTML view
+		// TODO: The whole task should be an anchor div that when
+		// clicking, should send the UUID of the task to return the
+		// whole description from the server
 		console.log("User already exists -> " + userReq.headers.cookie);
-		try {
-			const result = await getUserTasks(userReq.headers.cookie);
+		const result = await getUserTasks(userReq.headers.cookie);
+
+		if (typeof result === "object") {
 			const $ = cheerio.load(indexHtml);
-			let v: string[] = [];
-			if (typeof result === "object") {
-				for (let task in result as Tasks) {
-					let a = result[task].title;
-					let b = result[task].description;
-					v.push(`<div data-uuid=${task}><h3>${a}</h3><p>${b}</p></div>`);
-				}
-				for (let child of v)
-					$("body").append(child);
+			for (let task in result as Tasks) {
+				let title = result[task].title;
+				let desc = result[task].description;
+
+				// Want to display only the first 100
+				// characters from the description 
+				desc = desc.length > 100 ? desc.substring(0, 100) + "..." : desc;
+				$("body").append(`<div data-uuid=${task}><h3>${title}</h3><p>${desc}</p></div>`);
 			}
-			$("body").append("<p> Hello this is my website </p>");
 			indexHtml = $.html();
-		} catch (e){
-			// In case the function doesn't get any rows 
-			console.error(e);
 		}
+		// else {
+			// This user has no tasks, so you can do nothing
+		//}
 
 		const response: Response = {
 			codeStatus: 200,
