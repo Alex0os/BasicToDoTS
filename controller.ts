@@ -121,11 +121,29 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 				let title = result[task].title;
 				let desc = result[task].description;
 
-				// Want to display only the first 100
-				// characters from the description 
+				// Display only the first 100 characters from the
+				// description 
 				desc = desc.length > 100 ? desc.substring(0, 100) + "..." : desc;
-				$("body").append(`<div data-uuid=${task}><h3>${title}</h3><p>${desc}</p></div>`);
+
+
+				$("body").append(`<div class=task data-uuid=${task}>\n<h3>${title}\n</h3>\n<p>${desc}</p></div>`);
 			}
+			// This is the most obscure crap I ever made, but I'm
+			// really not feeling it today, just wanna finish this
+			// shit, I'll refactor it later, when I got the time
+			// For now, it does what it needs to 
+			$("body").append(`
+		<script>
+			const divs = document.getElementsByClassName('task');
+
+			// Loop through each div and add the click event listener
+			for (let div of divs) {
+				div.addEventListener('click', function() {
+					alert(div.getAttribute("data-uuid"));
+				});
+			}
+		</script>
+		`);
 			indexHtml = $.html();
 		}
 		// else {
