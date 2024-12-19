@@ -1,7 +1,7 @@
 import { IncomingMessage } from "http";
 import * as cheerio from "cheerio"
 import path, { join } from "node:path";
-import { readFileSync }  from "fs";
+import { readFileSync, existsSync }  from "fs";
 
 import { createUser, getUserTasks, Tasks } from "./db_implementations";
 
@@ -32,7 +32,7 @@ interface Response {
 const PROJECT_DIR = path.resolve(__dirname, "..");
 export const COOKIE_TIMEOUT = 60 * 60 // 1 hour
 
-// Let's create the implementation that will allow the user to create the task
+
 function taskCreationPage(userReq: IncomingMessage): Response {
 	let tasksHtml: string;
 
@@ -112,7 +112,6 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 		// TODO: The whole task should be an anchor div that when
 		// clicking, should send the UUID of the task to return the
 		// whole description from the server
-		console.log("User already exists -> " + userReq.headers.cookie);
 		const result = await getUserTasks(userReq.headers.cookie);
 
 		if (typeof result === "object") {
@@ -120,35 +119,18 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 			for (let task in result as Tasks) {
 				let title = result[task].title;
 				let desc = result[task].description;
-
-				// Display only the first 100 characters from the
-				// description 
+				// Wanna display only the first 100 chars of the desc
 				desc = desc.length > 100 ? desc.substring(0, 100) + "..." : desc;
 
-
-				$("body").append(`<div class=task data-uuid=${task}>\n<h3>${title}\n</h3>\n<p>${desc}</p></div>`);
+				$("body").append(`<div class=task data-uuid=${task}>
+						 	<h3>${title}</h3>
+						 	<p>${desc}</p>
+						 </div>\n`
+						);
 			}
-			// This is the most obscure crap I ever made, but I'm
-			// really not feeling it today, just wanna finish this
-			// shit, I'll refactor it later, when I got the time
-			// For now, it does what it needs to 
-			$("body").append(`
-		<script>
-			const divs = document.getElementsByClassName('task');
-
-			// Loop through each div and add the click event listener
-			for (let div of divs) {
-				div.addEventListener('click', function() {
-					alert(div.getAttribute("data-uuid"));
-				});
-			}
-		</script>
-		`);
+			$("body").append(`<script src="src/index.js"></script>`);
 			indexHtml = $.html();
 		}
-		// else {
-			// This user has no tasks, so you can do nothing
-		//}
 
 		const response: Response = {
 			codeStatus: 200,
@@ -162,22 +144,36 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 
 export async function serverUrls(userReq: IncomingMessage): Promise<Response>
 {
-	// TODO: See if you can separate the async and sync implementation so it
-	// only get into async stuff when necessary
 	if (userReq.url === "/")
 		return mainPage(userReq);
 	else if (userReq.url === "/createTask") {
 		return taskCreationPage(userReq);
 	}
 	else {
-		return {
-			codeStatus: 404,
-			header: {
-				"content-type": "text/html",
-				"Access-Control-Allow-Origin": "*"
-			},
-			body: "404 Not Found"
-		};
+		const resource = process.cwd() + "/public" + userReq.url;
+		console.log(resource)
+		if (existsSync(resource)) {
+			console.log("The resource will be return: " + resource);
+			return {
+				codeStatus: 200,
+				header: {
+					"content-type": "text/html",
+					"Access-Control-Allow-Origin": "*"
+				},
+				body: readFileSync(resource, "utf8")
+			}
+		}
+		else {
+			return {
+				codeStatus: 404,
+				header: {
+					"content-type": "text/html",
+					"Access-Control-Allow-Origin": "*"
+				},
+				body: "404 Not Found"
+			};
+		}
+
 	}
 }
 
