@@ -137,3 +137,21 @@ export async function createTask(userCookie: string, task: TaskInfo): Promise<vo
 	console.log(result);
 	return;
 }
+
+export async function getTask(task_uuid: String): Promise<TaskInfo>
+{
+	let psqlConnection  = await SQL_CONNECTION;
+
+	const query = await psqlConnection.query(
+		`SELECT title, description FROM tasks
+		 WHERE task_uuid='${task_uuid}'`);
+
+	const info = query.rows[0]
+	const task: TaskInfo = {
+		title: info[0],
+		description: info[1]
+	}
+
+	return task;
+}
+

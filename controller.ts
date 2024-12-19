@@ -3,7 +3,7 @@ import * as cheerio from "cheerio"
 import path, { join } from "node:path";
 import { readFileSync, existsSync }  from "fs";
 
-import { createUser, getUserTasks, Tasks } from "./db_implementations";
+import { createUser, getUserTasks, getTask, Tasks } from "./db_implementations";
 
 interface ResponseHeader {
 	[key: string]: string | undefined;
@@ -97,8 +97,6 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 		"sessionId=" + cookieId + "; Path=/; HttpOnly; Secure; Max-Age=" 
 		+ COOKIE_TIMEOUT.toString() + ";" + "SameSite=Strict";
 
-		// I'd like to remember, not prefixing async in promises inside async
-		// functions mostly makes sense if you are returning another promise
 		await createUser("sessionId=" + cookieId);
 
 		const response: Response = {
@@ -142,18 +140,39 @@ async function mainPage(userReq: IncomingMessage): Promise<Response>{
 	}
 }
 
+async function renderTask(reqUrl: String): Promise<Response>
+{
+	const task_uuid = reqUrl.replace(/\/task\//, "");
+	const task =  await getTask(task_uuid);
+	// Render the HTML with the task
+	const $ = cheerio.load(
+		`<h1>${task.title}</h1>
+		<h2>${task.description}</h2>`
+	);
+
+	return {
+		codeStatus: 200,
+		header: {
+			"Access-Control-Allow-Origin": "*",
+			"content-type": "text/html"
+		},
+		body: $.html()
+	}
+}
+
 export async function serverUrls(userReq: IncomingMessage): Promise<Response>
 {
 	if (userReq.url === "/")
 		return mainPage(userReq);
 	else if (userReq.url === "/createTask") {
 		return taskCreationPage(userReq);
+	} 
+	else if (userReq.url?.match("task")) {
+	     return renderTask(userReq.url);
 	}
 	else {
 		const resource = process.cwd() + "/public" + userReq.url;
-		console.log(resource)
 		if (existsSync(resource)) {
-			console.log("The resource will be return: " + resource);
 			return {
 				codeStatus: 200,
 				header: {
